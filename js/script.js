@@ -10,8 +10,10 @@ portImg.src ="./images/port.jpg";
 
 var seaImg = new Image();
 seaImg.src = "./images/topseaview.jpg";
-// CLASS DECLARATION
 
+
+// CLASS DECLARATION
+// -----------------
 //-- Building (x, y, width, height)
 class Build {
   constructor (x, y, width, height) {
@@ -21,17 +23,23 @@ class Build {
     this.height = height;
     this.maxX = this.x + this.width;
     this.maxY = this.y + this. height;
+    this.coord = [  {x: this.x,               y: this.y},
+                    {x: this.x + this.width,  y: this.y},
+                    {x: this.x + this.width,  y: this.y + this.height},
+                    {x: this.x,               y: this.y + this.height}
+                ];
   }
 
   drawMe () {
     ctx.fillStyle = "#7e7e7e";
     ctx.drawImage (portImg, this.x, this.y, this.width, this.height);
     // ctx.fillRect (this.x, this.y, this.width, this.height);
+    
 
   }
 }
 
-// -- Finishline (x, y)
+//-- Finishline (x, y)
 class FinishLine {
   constructor (x, y) {
     this.x = x;
@@ -48,9 +56,6 @@ class FinishLine {
   }
 }
     
-
-  
-
 // -- Boat (x, y, speed, angle)
 class Boat {
   constructor (x, y, speed, angle) {
@@ -62,6 +67,7 @@ class Boat {
     this.angle = angle;
     this.setSpeed = 0;
     this.setAngle = 0;
+    this.isCrashed = false;
   }
 
   drawMe () {
@@ -69,25 +75,28 @@ class Boat {
     // ----------------------------------------------------------------------
     // Acceleration/ décélération et friction
     if (this.setSpeed === 0) {
-       this.speed *= 0.995
+       this.speed *= 0.998
     }
 
     else if (this.setSpeed > 0) {
       if (this.speed < this.setSpeed) {
-        this.speed += this.setSpeed * 0.005;
+        this.speed += this.setSpeed * 0.003;
       }
       else if (this.speed > this.setSpeed) {
-        this.speed *= 0.995;
+        this.speed *= 0.998;
       }
     }
 
     else if (this.setSpeed < 0) {
       if (this.speed > this.setSpeed) {
-        this.speed += this.setSpeed * 0.005;
+        this.speed += this.setSpeed * 0.003;
       }
       else if (this.speed < this.setSpeed) {
-        this.speed *= 0.995;
+        this.speed *= 0.998;
       }
+    }
+    if (this.isCrashed=== true) {
+      this.speed=0;
     }
     
 // Set angle
@@ -102,11 +111,11 @@ class Boat {
 
     
     
-// Rotate the canvas around the origin
+// Rotate the canvas around the boat
     ctx.rotate(rad);
    
 // draw the image  
-    ctx.fillStyle = "#000000";  
+    // ctx.fillStyle = "#000000";  
     // ctx.fillRect(this.width / 2 * (-1),this.height / 2 *(-1) ,this.width,this.height);
     
   
@@ -123,8 +132,7 @@ class Boat {
     var y0 = this.y + this.height /2;
     var x8 = this.x - this.width /2;
     var y8 = this.y - this.height /2;
-    // var x9 = this.x + this.width;
-    // var y9 = this.y + this.height/2;
+    
 
   // Récupère le bon angle (opposé à l'angle de départ) 
       var rad2 = rad * (-1);
@@ -163,18 +171,21 @@ class Boat {
   // ctx.fill();
   // ctx.closePath();
   // ----------------------------------------------------------------------------------
-  // HUD WRITING 
+  // ---------------------------------------  HUD WRITING  ----------------------------
       ctx.fillStyle ="white";
       ctx.font = "25px arial";
-      ctx.fillText ("Thrust = " + this.setSpeed,1100 , 50);
+      ctx.fillText ("Thrust = " + this.setSpeed,this.x + 100, this.y + 50);
       if (this.setAngle > 0)
-        {ctx.fillText ("Starboard = " + this.setAngle,1100 , 70);}
+        {ctx.fillText ("Starboard = " + this.setAngle,1100 , 70);
+      }
   
       else if (this.setAngle < 0)
-        {ctx.fillText ("Larboard = " + (-1) * this.setAngle,1100 , 70);}
+        {ctx.fillText ("Larboard = " + (-1) * this.setAngle,1100 , 70);
+      }
   
-      else {ctx.fillText ("No Angle", 1100 , 70);}
-
+      else {ctx.fillText ("No Angle", 1100 , 70);
+      }
+// GETTING BOAT ROTATED VERTICE COORD (for collision testing purpose)
       this.coord = [  {x: x2, y: y2}, //A
                       {x: x3, y: y3}, //B
                       {x: x4, y: y4}, //C
@@ -186,10 +197,13 @@ class Boat {
       this.maxY = Math.max (this.coord[0].y, this.coord[1].y, this.coord[2].y, this.coord[3].y);
       this.minY = Math.min (this.coord[0].y, this.coord[1].y, this.coord[2].y, this.coord[3].y);
       
-
-    }
-
+      
   }
+
+}
+
+  
+
 
 
 
@@ -199,14 +213,75 @@ class Boat {
 // LEVEL 1
 var buildStockLvl1 = [
   new Build (0, 0, 300, 300),
+  new Build (480, 250, 700, 50),
 ];
  var boat1 = new Boat (0, 340, 0, 0);
 
- var finishLine1 = new FinishLine (300,300);
+ var finishLine1 = new FinishLine (900,10);
 
-// -------------------------------------------------------------------
-// COLLISION TESTING FUNCTIONS
+// -------------------------------------------------------------------------------------------------
+// /!\/!\/!\/!\/!\/!\/!\   COLLISION TESTING FUNCTIONS /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
+// --------------------------------------------------------------------------------------------------
 
+function isUndefined(a) {
+  return a === undefined;
+}
+function isCrashed (a, b) {
+  var polygons = [a, b];
+  var minA, maxA, projected, i, i1, j, minB, maxB;
+
+  for (i = 0; i < polygons.length; i++) {
+
+      // for each polygon, look at each edge of the polygon, and determine if it separates
+      // the two shapes
+      var polygon = polygons[i];
+      for (i1 = 0; i1 < polygon.length; i1++) {
+
+          // grab 2 vertices to create an edge
+          var i2 = (i1 + 1) % polygon.length;
+          var p1 = polygon[i1];
+          var p2 = polygon[i2];
+
+          // find the line perpendicular to this edge
+          var normal = { x: p2.y - p1.y, y: p1.x - p2.x };
+
+          minA = maxA = undefined;
+          // for each vertex in the first shape, project it onto the line perpendicular to the edge
+          // and keep track of the min and max of these values
+          for (j = 0; j < a.length; j++) {
+              projected = normal.x * a[j].x + normal.y * a[j].y;
+              if (isUndefined(minA) || projected < minA) {
+                  minA = projected;
+              }
+              if (isUndefined(maxA) || projected > maxA) {
+                  maxA = projected;
+              }
+          }
+
+          // for each vertex in the second shape, project it onto the line perpendicular to the edge
+          // and keep track of the min and max of these values
+          minB = maxB = undefined;
+          for (j = 0; j < b.length; j++) {
+              projected = normal.x * b[j].x + normal.y * b[j].y;
+              if (isUndefined(minB) || projected < minB) {
+                  minB = projected;
+              }
+              if (isUndefined(maxB) || projected > maxB) {
+                  maxB = projected;
+              }
+          }
+
+          // if there is no overlap between the projects, the edge we are looking at separates the two
+          // polygons, and we know there is no overlap
+          if (maxA < minB || maxB < minA) {
+              // console.log("polygons don't intersect!");
+              return false;
+          }
+      }
+  }
+  return true;
+};
+// -----------------------------------
 function isFinished (boat, finishLine) {
   
   if (boat.maxX <= finishLine.maxX && 
@@ -221,85 +296,83 @@ function isFinished (boat, finishLine) {
   else return false;
 }
 
-// function isCrashed (boat, build) {
-//   if (boat.maxX <= build.maxX && boat.minY <= build.maxY || boat.maxX >= build.x && ) {
-//     console.log ("crashed !!!!");
-//     return true;
-//   }
-// }
+
 
 
 // DRAWING FUNCTIONS
 // ----------------------------------------------
 
-// Buildings in LVL array (WILL HAVE A COLLISION DETEC°)
-// Si un des 4 coins est dans la surface -> collision
+
 function createBuild (buildStock) {
   buildStock.forEach (function (oneBuild) {
-    oneBuild.drawMe();
-    // isCrashed (boat1,oneBuild);
-  })
+  
+  oneBuild.drawMe();
+
+    
+  });
 }
+   
 
   //-- Decor
 function createDecor () {
 
   //-- Arriere plan -- EAU
-  ctx.fillStyle = "#00B2FF";
-  // ctx.fillRect (0, 0, 1280, 720);
-  ctx.drawImage (seaImg, 0, 0, 1280, 720);
+  
+  ctx.drawImage (seaImg, 0, 0, 1100, 720);
 }
 
 // ---------------    GAMELOOP FUNCTION  ----------------------
 function gameLoop () {
-  ctx.clearRect (0, 0, 1280, 720);
+  ctx.clearRect (0, 0, 1100, 720);
 
   //  !!!!!! ALL ELEMENT DRAWING FUNCTION BELOW !!!!!!!
-
+  
   createDecor();
-  createBuild(buildStockLvl1);
   boat1.drawMe();
+  createBuild(buildStockLvl1);
+  for (var i=0; i< buildStockLvl1.length; i++) {
+    if (isCrashed (boat1.coord, buildStockLvl1[i].coord)) {
+      boat1.isCrashed = true;
+      window.location.href = "index.html";
+    };
+  };
   finishLine1.drawMe();
   isFinished (boat1, finishLine1);
-  
- 
-
   // Request animation frame
   requestAnimationFrame( function () {
     gameLoop();
   })
 };
+  
 
-// ----------- Initiate the loop -------------
+// ----------- Initiate the loop ------------- TCHOUTCHOUuuuuuuuuu !!!
 gameLoop();
-
-
-
+  
 // EVENT LISTENER -----------> keyboard Click
 document.onkeydown = function (event) {
   
     switch (event.keyCode) {
-      case 37 : // left arrow
+      case 75 : // left arrow
       if (boat1.setAngle === -13){break;}
       else {
         boat1.setAngle -= 1;
         break;
       }
   
-      case 38 : // up arrow
+      case 79 : // up arrow
       if (boat1.setSpeed === 4){break;}
       else{
         boat1.setSpeed += 1;
         break;}
   
-      case 39 : // right arrow
+      case 77 : // right arrow
       if (boat1.setAngle === 13){break;}
       else {
         boat1.setAngle += 1;
         break;
       }
   
-      case 40 : // down arrow
+      case 76 : // down arrow
       if (boat1.setSpeed === -3) {break;}
       else {
         boat1.setSpeed -= 1;
@@ -307,3 +380,10 @@ document.onkeydown = function (event) {
       }
     }
   }
+
+ 
+ 
+
+
+
+
