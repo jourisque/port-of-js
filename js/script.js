@@ -5,11 +5,17 @@ var ctx = canvas.getContext("2d");
 var boatImg = new Image();
 boatImg.src = "./images/boat.png";
 
-var portImg = new Image();
-portImg.src ="./images/port.jpg";
+// var portImg = new Image();
+// portImg.src ="./images/port.jpg";
+var sandImg = new Image();
+sandImg.src ="./images/sand.png";
 
 var seaImg = new Image();
 seaImg.src = "./images/topseaview.jpg";
+var rockImg = new Image();
+rockImg.src = "./images/rock2.png";
+var digueImg = new Image();
+digueImg.src = "./images/pebble3.png";
 
 
 // CLASS DECLARATION
@@ -31,13 +37,34 @@ class Build {
   }
 
   drawMe () {
-    ctx.fillStyle = "#7e7e7e";
-    ctx.drawImage (portImg, this.x, this.y, this.width, this.height);
+    // ctx.fillStyle = "#7e7e7e";
+    ctx.drawImage (rockImg, this.x, this.y, this.width, this.height);
     // ctx.fillRect (this.x, this.y, this.width, this.height);
-    
-
   }
 }
+
+class Digue {
+  constructor (x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.maxX = this.x + this.width;
+    this.maxY = this.y + this. height;
+    this.coord = [  {x: this.x,               y: this.y},
+                    {x: this.x + this.width,  y: this.y},
+                    {x: this.x + this.width,  y: this.y + this.height},
+                    {x: this.x,               y: this.y + this.height}
+                ];
+  }
+
+  drawMe () {
+    // ctx.fillStyle = "#7e7e7e";
+    ctx.drawImage (digueImg, this.x, this.y, this.width, this.height);
+    // ctx.fillRect (this.x, this.y, this.width, this.height);
+  }
+}
+
 
 //-- Finishline (x, y)
 class FinishLine {
@@ -51,6 +78,7 @@ class FinishLine {
   }
 
   drawMe() {
+    ctx.fillStyle = "white";
     ctx.strokeStyle = "white";
     ctx.strokeRect (this.x, this.y, this.width, this.height);
   }
@@ -170,21 +198,7 @@ class Boat {
   // ctx.fillStyle = "blue";
   // ctx.fill();
   // ctx.closePath();
-  // ----------------------------------------------------------------------------------
-  // ---------------------------------------  HUD WRITING  ----------------------------
-      ctx.fillStyle ="white";
-      ctx.font = "25px arial";
-      ctx.fillText ("Thrust = " + this.setSpeed,this.x + 100, this.y + 50);
-      if (this.setAngle > 0)
-        {ctx.fillText ("Starboard = " + this.setAngle,1100 , 70);
-      }
   
-      else if (this.setAngle < 0)
-        {ctx.fillText ("Larboard = " + (-1) * this.setAngle,1100 , 70);
-      }
-  
-      else {ctx.fillText ("No Angle", 1100 , 70);
-      }
 // GETTING BOAT ROTATED VERTICE COORD (for collision testing purpose)
       this.coord = [  {x: x2, y: y2}, //A
                       {x: x3, y: y3}, //B
@@ -213,11 +227,11 @@ class Boat {
 // LEVEL 1
 var buildStockLvl1 = [
   new Build (0, 0, 300, 300),
-  new Build (480, 250, 700, 50),
+  new Digue (480, 250, 700, 50),
 ];
  var boat1 = new Boat (0, 340, 0, 0);
 
- var finishLine1 = new FinishLine (900,10);
+ var finishLine1 = new FinishLine (950,200);
 
 // -------------------------------------------------------------------------------------------------
 // /!\/!\/!\/!\/!\/!\/!\   COLLISION TESTING FUNCTIONS /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
@@ -317,8 +331,10 @@ function createBuild (buildStock) {
 function createDecor () {
 
   //-- Arriere plan -- EAU
-  
   ctx.drawImage (seaImg, 0, 0, 1100, 720);
+  // ctx.drawImage (sandImg, 0, 0, 1100,30);
+  ctx.drawImage (rockImg, 480, 250, 700, 50);
+  
 }
 
 // ---------------    GAMELOOP FUNCTION  ----------------------
@@ -336,7 +352,24 @@ function gameLoop () {
       window.location.href = "index.html";
     };
   };
+
   finishLine1.drawMe();
+  
+  // ---------------------------------------  HUD WRITING  ----------------------------
+  ctx.fillStyle ="white";
+  ctx.font = "25px arial";
+  ctx.fillText ("Thrust = " + boat1.setSpeed,boat1.x + 100, boat1.y + 50);
+  if (boat1.setAngle > 0)
+    {ctx.fillText ("Starboard = " + boat1.setAngle,1100 , 70);
+  }
+
+  else if (boat1.setAngle < 0)
+    {ctx.fillText ("Larboard = " + (-1) * boat1.setAngle,1100 , 70);
+  }
+
+  else {ctx.fillText ("No Angle", 1100 , 70);
+  }
+  
   isFinished (boat1, finishLine1);
   // Request animation frame
   requestAnimationFrame( function () {
