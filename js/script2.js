@@ -244,13 +244,14 @@ var buildStockLvl1 = [
 
 var buildStockLvl2 = [
   new Build (0, 0, 300, 300),
-  new Digue (0, 700, 700, 50),
+  new Digue (0, 500, 700, 50),
+  new Digue (480, 250, 700, 50),
 ];
  var boat1 = new Boat (1, 340, 0, 0);
 
- var clock1 = new Clock(7220);
+ var clock1 = new Clock(5420);
 
- var finishLine1 = new FinishLine (950,210);
+ var finishLine1 = new FinishLine (10,600);
 
 // -------------------------------------------------------------------------------------------------
 // /!\/!\/!\/!\/!\/!\/!\   COLLISION TESTING FUNCTIONS /!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\/!\
@@ -353,7 +354,7 @@ function createDecor () {
   //-- Arriere plan -- EAU
   ctx.drawImage (seaImg, 0, 0, 1100, 720);
   // ctx.drawImage (sandImg, 0, 0, 1100,30);
-  ctx.drawImage (rockImg, 480, 250, 700, 50);
+  // ctx.drawImage (rockImg, 480, 250, 700, 50);
   
 }
 
@@ -411,9 +412,9 @@ function gameLoop () {
         window.location.href = "gameOver.html";
       }, 3000);
   }
-  createBuild(buildStockLvl1);
-  for (var i=0; i< buildStockLvl1.length; i++) {
-    if (isCrashed (boat1.coord, buildStockLvl1[i].coord)) {
+  createBuild(buildStockLvl2);
+  for (var i=0; i< buildStockLvl2.length; i++) {
+    if (isCrashed (boat1.coord, buildStockLvl2[i].coord)) {
       boat1.isCrashed = true;
       setTimeout ( function(){
         window.location.href = "gameOver.html";
