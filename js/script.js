@@ -7,8 +7,8 @@ boatImg.src = "./images/boat.png";
 
 // var portImg = new Image();
 // portImg.src ="./images/port.jpg";
-var sandImg = new Image();
-sandImg.src ="./images/sand.png";
+// var sandImg = new Image();
+// sandImg.src ="./images/sand.png";
 
 var seaImg = new Image();
 seaImg.src = "./images/topseaview.jpg";
@@ -64,7 +64,6 @@ class Digue {
     // ctx.fillRect (this.x, this.y, this.width, this.height);
   }
 }
-
 
 //-- Finishline (x, y)
 class FinishLine {
@@ -216,12 +215,6 @@ class Boat {
 
 }
 
-  
-
-
-
-
-
 // Buildings array (buildings in a level) + Build our BOAT
 // -------------------------------------------
 // LEVEL 1
@@ -229,7 +222,12 @@ var buildStockLvl1 = [
   new Build (0, 0, 300, 300),
   new Digue (480, 250, 700, 50),
 ];
- var boat1 = new Boat (0, 340, 0, 0);
+
+var buildStockLvl2 = [
+  new Build (0, 0, 300, 300),
+  new Digue (0, 500, 700, 50),
+];
+ var boat1 = new Boat (1, 340, 0, 0);
 
  var finishLine1 = new FinishLine (950,200);
 
@@ -295,6 +293,13 @@ function isCrashed (a, b) {
   }
   return true;
 };
+
+function outOfBoundaries (boat) {
+  if (boat.maxX > 1100 || boat.minX < 0 || boat.maxY > 720 || boat.minY < 0) {
+    return true;
+  }
+  return false;
+};
 // -----------------------------------
 function isFinished (boat, finishLine) {
   
@@ -310,23 +315,16 @@ function isFinished (boat, finishLine) {
   else return false;
 }
 
-
-
-
 // DRAWING FUNCTIONS
 // ----------------------------------------------
 
 
 function createBuild (buildStock) {
   buildStock.forEach (function (oneBuild) {
-  
-  oneBuild.drawMe();
-
-    
+    oneBuild.drawMe();
   });
 }
-   
-
+  
   //-- Decor
 function createDecor () {
 
@@ -345,32 +343,46 @@ function gameLoop () {
   
   createDecor();
   boat1.drawMe();
+  if (outOfBoundaries (boat1)) {
+    boat1.isCrashed = true;
+      setTimeout ( function(){
+        window.location.href = "index.html";
+      }, 3000);
+  }
   createBuild(buildStockLvl1);
   for (var i=0; i< buildStockLvl1.length; i++) {
     if (isCrashed (boat1.coord, buildStockLvl1[i].coord)) {
       boat1.isCrashed = true;
-      window.location.href = "index.html";
+      setTimeout ( function(){
+        window.location.href = "index.html";
+      }, 3000);
     };
   };
+      
 
   finishLine1.drawMe();
   
   // ---------------------------------------  HUD WRITING  ----------------------------
   ctx.fillStyle ="white";
   ctx.font = "25px arial";
-  ctx.fillText ("Thrust = " + boat1.setSpeed,boat1.x + 100, boat1.y + 50);
+  ctx.fillText ("Thrust = " + boat1.setSpeed, boat1.x + 100, boat1.y + 50);
   if (boat1.setAngle > 0)
-    {ctx.fillText ("Starboard = " + boat1.setAngle,1100 , 70);
+    {ctx.fillText ("Starboard = " + boat1.setAngle, boat1.x + 100 , boat1.y + 70);
   }
 
   else if (boat1.setAngle < 0)
-    {ctx.fillText ("Larboard = " + (-1) * boat1.setAngle,1100 , 70);
+    {ctx.fillText ("Larboard = " + (-1) * boat1.setAngle, boat1.x + 100 , boat1.y + 70);
   }
 
-  else {ctx.fillText ("No Angle", 1100 , 70);
+  else {ctx.fillText ("No Angle", boat1.x + 100 , boat1.y + 70);
   }
-  
-  isFinished (boat1, finishLine1);
+  // ----------------------------------------------------------------------------------------
+  if (isFinished (boat1, finishLine1)) {
+    boat1.speed = 0;
+    setTimeout ( function(){
+      window.location.href = "game1.html";
+    }, 3000);
+  };
   // Request animation frame
   requestAnimationFrame( function () {
     gameLoop();
